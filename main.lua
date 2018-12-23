@@ -15,6 +15,15 @@ function ball.update(dt)
     ball.y = ball.y + ball.speed_y * dt
 end
 
+function ball.bounding_rectangle()
+    return ({
+        x = ball.x - ball.radius,
+        y = ball.y - ball.radius,
+        width = 2 * ball.radius,
+        height = 2 * ball.radius
+    })
+end
+
 
 local platform = {}
 platform.x = 500
@@ -163,11 +172,61 @@ function walls.draw()
 end
 
 
+local collisions = {}
+
+function collisions.resolve_collisions()
+    collisions.ball_platform_collision(ball, platform)
+    collisions.ball_walls_collision(ball, walls)
+    collisions.ball_bricks_collision(ball, bricks)
+    collisions.platform_walls_collision(platform, walls)
+end
+
+function collisions.check_rectangle_overlap(a, b)
+    local overlap = false
+   if not( a.x + a.width < b.x  or b.x + b.width < a.x  or
+           a.y + a.height < b.y or b.y + b.height < a.y ) then
+      overlap = true
+   end
+   return overlap
+end
+
+function collisions.ball_platform_collision(ball, platform)
+    if collisions.check_rectangle_overlap(ball.bounding_rectangle(), platform) then
+        print('ball-platform collision')
+    end
+end
+
+function collisions.ball_bricks_collision(ball, bricks)
+    ball_bounding_rectange = ball.bounding_rectangle()
+    for _, brick in pairs(bricks.current_level_bricks) do
+        if collisions.check_rectangle_overlap(ball_bounding_rectange, brick) then
+            print('ball-brick collision')
+        end
+    end
+end
+
+function collisions.ball_walls_collision(ball, walls)
+    ball_bounding_rectange = ball.bounding_rectangle()
+    for _, wall in pairs(walls.current_level_walls) do
+        if collisions.check_rectangle_overlap(ball_bounding_rectange, wall) then
+            print('ball-wall collision')
+        end
+    end
+end
+
+function collisions.platform_walls_collision(platform, walls)
+    for _, wall in pairs(walls.current_level_walls) do
+        if collisions.check_rectangle_overlap(platform, wall) then
+            print('ball-wall collision')
+        end
+    end
+end
+
+
 function love.load()
     bricks.construct_level()
     walls.construct_walls()
 end
-
 
 function love.keypressed(key)
     if key == 'escape' then
@@ -181,6 +240,7 @@ function love.update(dt)
     platform.update(dt)
     bricks.update(dt)
     walls.update(dt)
+    collisions.resolve_collisions()
 end
 
 
