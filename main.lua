@@ -1,9 +1,9 @@
 local ball = {}
-ball.x = 300
-ball.y = 300
+ball.x = 200
+ball.y = 500
 ball.radius = 10
-ball.speed_x = 300
-ball.speed_y = 300
+ball.speed_x = 700
+ball.speed_y = 700
 
 function ball.draw()
     local segments_in_circle = 16
@@ -42,12 +42,18 @@ function ball.rebound(shift_ball_x, shift_ball_y)
 end
 
 
+function ball.reposition()
+    ball.x = 200
+    ball.y = 500
+end
+
+
 local platform = {}
 platform.x = 500
 platform.y = 500
 platform.width = 70
 platform.height = 20
-platform.speed_x = 300
+platform.speed_x = 500
 
 function platform.draw()
     love.graphics.rectangle('line', platform.x, platform.y, platform.width, platform.height)
@@ -69,8 +75,6 @@ end
 
 
 local bricks = {}
-bricks.rows = 8
-bricks.columns = 11
 bricks.x = 70
 bricks.y = 50
 bricks.width = 50
@@ -79,15 +83,17 @@ bricks.horizontal_distance = 10
 bricks.vertical_distance = 15
 bricks.current_level_bricks = {}
 
-function bricks.construct_level()
-    for row = 1, bricks.rows do
-        for col = 1, bricks.columns do
-            local new_brick_x = bricks.x +
-                (col - 1) * (bricks.width + bricks.horizontal_distance)
-            local new_brick_y = bricks.y +
-                (row - 1) * (bricks.height + bricks.vertical_distance)
-            local new_brick = bricks.new_brick(new_brick_x, new_brick_y)
-            bricks.add_to_current_level(new_brick)
+function bricks.construct_level(level_bricks_arrangement)
+    for row_index, row in ipairs(level_bricks_arrangement) do
+        for col_index, brick_type in ipairs(row) do
+            if brick_type ~= 0 then
+                local new_brick_x = bricks.x +
+                    (col_index - 1) * (bricks.width + bricks.horizontal_distance)
+                local new_brick_y = bricks.y +
+                    (row_index - 1) * (bricks.height + bricks.vertical_distance)
+                local new_brick = bricks.new_brick(new_brick_x, new_brick_y)
+                bricks.add_to_current_level(new_brick)
+            end
         end
     end
 end
@@ -273,8 +279,48 @@ function collisions.platform_walls_collision(platform, walls)
 end
 
 
+local levels = {}
+
+levels.sequence = {}
+levels.sequence[1] = {
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+   { 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1 },
+   { 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1 },
+   { 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0 },
+   { 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0 },
+   { 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0 },
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+}
+
+levels.sequence[2] = {
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+   { 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1 },
+   { 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0 },
+   { 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0 },
+   { 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0 },
+   { 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1 },
+   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+}
+
+levels.current_level = 0
+levels.game_finished = false
+
+function levels.switch_to_next_level(bricks)
+    if #bricks.current_level_bricks == 0 then
+        if levels.current_level < #levels.sequence then
+            levels.current_level = levels.current_level + 1
+            bricks.construct_level(levels.sequence[levels.current_level])
+            ball.reposition()
+        else
+            levels.game_finished = true
+        end
+    end
+end
+
+
 function love.load()
-    bricks.construct_level()
     walls.construct_walls()
 end
 
@@ -291,6 +337,7 @@ function love.update(dt)
     bricks.update(dt)
     walls.update(dt)
     collisions.resolve_collisions()
+    levels.switch_to_next_level(bricks)
 end
 
 
@@ -299,6 +346,10 @@ function love.draw()
     platform.draw()
     bricks.draw()
     walls.draw()
+    if levels.game_finished then
+        love.graphics.printf('Congratulations!\n' .. 'You have finisehd the game',
+            300, 250, 200, 'center')
+    end
 end
 
 
