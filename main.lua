@@ -8,6 +8,7 @@ local levels = require 'levels'
 
 function love.load()
     walls.construct_walls()
+    bricks.construct_level(levels.require_current_level())
 end
 
 function love.keypressed(key)
