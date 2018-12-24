@@ -63,6 +63,10 @@ function platform.update(dt)
     end
 end
 
+function platform.bounce_from_wall(shift_platform_x, shift_platform_y)
+    platform.x = platform.x + shift_platform_x
+end
+
 
 local bricks = {}
 bricks.rows = 8
@@ -119,6 +123,10 @@ function bricks.update(dt)
     for _, brick in pairs(bricks.current_level_bricks) do
         bricks.update_brick(brick)
     end
+end
+
+function bricks.brick_hit_by_ball(idx, brick, shift_ball_x, shift_ball_y)
+    table.remove(bricks.current_level_bricks, idx)
 end
 
 
@@ -229,26 +237,37 @@ end
 
 function collisions.ball_bricks_collision(ball, bricks)
     ball_bounding_rectange = ball.bounding_rectangle()
-    for _, brick in pairs(bricks.current_level_bricks) do
-        if collisions.check_rectangle_overlap(ball_bounding_rectange, brick) then
-            print('ball-brick collision')
+    for idx, brick in pairs(bricks.current_level_bricks) do
+        overlap, shift_ball_x, shift_ball_y =  collisions.check_rectangle_overlap(
+            brick, ball_bounding_rectange)
+        if overlap then
+            ball.rebound(shift_ball_x, shift_ball_y)
+            bricks.brick_hit_by_ball(idx, brick, shift_ball_x, shift_ball_y)
         end
     end
 end
 
 function collisions.ball_walls_collision(ball, walls)
     ball_bounding_rectange = ball.bounding_rectangle()
+    local overlap, shift_ball_x, shift_ball_y
     for _, wall in pairs(walls.current_level_walls) do
-        if collisions.check_rectangle_overlap(ball_bounding_rectange, wall) then
-            print('ball-wall collision')
+        overlap, shift_ball_x, shift_ball_y = collisions.check_rectangle_overlap(
+            wall, ball_bounding_rectange
+        )
+        if overlap then
+            ball.rebound(shift_ball_x, shift_ball_y)
         end
     end
 end
 
 function collisions.platform_walls_collision(platform, walls)
+    local overlap, shift_platform_x, shift_platform_y
     for _, wall in pairs(walls.current_level_walls) do
-        if collisions.check_rectangle_overlap(platform, wall) then
-            print('ball-wall collision')
+        overlap, shift_platform_x, shift_platform_y = collisions.check_rectangle_overlap(
+            wall, platform
+        )
+        if overlap then
+            platform.bounce_from_wall(shift_platform_x, shift_platform_y)
         end
     end
 end
