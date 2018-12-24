@@ -54,11 +54,11 @@ function platform.draw()
 end
 
 function platform.update(dt)
-    if love.keyboard.isDown('right') then
+    if love.keyboard.isDown('right', 'd') then
         platform.x = platform.x + platform.speed_x * dt
     end
 
-    if love.keyboard.isDown('left') then
+    if love.keyboard.isDown('left', 'a') then
         platform.x = platform.x - platform.speed_x * dt
     end
 end
