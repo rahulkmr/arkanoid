@@ -24,6 +24,23 @@ function ball.bounding_rectangle()
     })
 end
 
+function ball.rebound(shift_ball_x, shift_ball_y)
+    local min_shift = math.min(math.abs(shift_ball_x), math.abs(shift_ball_y))
+    if math.abs(shift_ball_x) == min_shift then
+        shift_ball_y = 0
+    else
+        shift_ball_x = 0
+    end
+    ball.x = ball.x + shift_ball_x
+    ball.y = ball.y + shift_ball_y
+    if shift_ball_x ~= 0 then
+        ball.speed_x = -ball.speed_x
+    end
+    if shift_ball_y ~= 0 then
+        ball.speed_y = -ball.speed_y
+    end
+end
+
 
 local platform = {}
 platform.x = 500
@@ -202,8 +219,11 @@ function collisions.check_rectangle_overlap(a, b)
 end
 
 function collisions.ball_platform_collision(ball, platform)
-    if collisions.check_rectangle_overlap(ball.bounding_rectangle(), platform) then
-        print('ball-platform collision')
+    overlap, shift_ball_x, shift_ball_y = collisions.check_rectangle_overlap(
+        platform, ball.bounding_rectangle()
+    )
+    if overlap then
+        ball.rebound(shift_ball_x, shift_ball_y)
     end
 end
 
