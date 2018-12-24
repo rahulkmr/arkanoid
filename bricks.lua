@@ -15,24 +15,35 @@ function bricks.construct_level(level_bricks_arrangement)
                     (col_index - 1) * (bricks.width + bricks.horizontal_distance)
                 local new_brick_y = bricks.y +
                     (row_index - 1) * (bricks.height + bricks.vertical_distance)
-                local new_brick = bricks.new_brick(new_brick_x, new_brick_y)
+                local new_brick = bricks.new_brick(new_brick_x, new_brick_y, brick_type)
                 bricks.add_to_current_level(new_brick)
             end
         end
     end
 end
 
-function bricks.new_brick(x, y, width, height)
+function bricks.new_brick(x, y, type, width, height)
     return ({
         x = x,
         y = y,
+        type = type,
         width = width or bricks.width,
-        height = height or bricks.height
+        height = height or bricks.height,
     })
 end
 
 function bricks.draw_brick(brick)
     love.graphics.rectangle('line', brick.x, brick.y, brick.width, brick.height)
+    local r, g, b, a = love.graphics.getColor()
+    if brick.type == 1 then
+        love.graphics.setColor(255, 0, 0, 100)
+    elseif brick.type == 2 then
+        love.graphics.setColor(0, 255, 0, 100)
+    elseif brick.type == 3 then
+        love.graphics.setColor(0, 0, 255, 100)
+    end
+    love.graphics.rectangle('fill', brick.x, brick.y, brick.width, brick.height)
+    love.graphics.setColor(r, g, b, a)
 end
 
 function bricks.update_brick(brick)
